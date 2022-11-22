@@ -18,14 +18,59 @@ public class EchoServer {
 	private void start() throws IOException, InterruptedException {
 		ServerSocket serverSocket = new ServerSocket(PORT_NUMBER);
 		while (true) {
-			Socket socket = serverSocket.accept();
+			//Constructs two connections			
+			Socket firstClient = serverSocket.accept();
+			ServerConnection firstConnection = new ServerConnection(firstClient);
+			Socket secondClient = serverSocket.accept();
+			ServerConnection secondConnection = new ServerConnection(secondClient);
 
-			// Put your code here.
-			// This should do very little, essentially:
-			//   * Construct an instance of your runnable class
-			//   * Construct a Thread with your runnable
-			//      * Or use a thread pool
-			//   * Start that thread
+			//Creates threads for connections
+			Thread firstThread = new Thread(firstConnection);
+			Thread secondThread = new Thread(secondConnection);
+
+			//Starts threads
+			firstThread.start();
+			secondThread.start();
+			firstThread.join();
+			secondThread.join();
+		}
+	}
+
+	public class ServerConnection implements Runnable {
+		Socket connection;
+		InputStream input;
+		OutputStream output;
+		public ServerConnection(Socket client) {
+			connection = client;
+        	System.out.println("Connected:");
+			try {
+	       		// Construct input stream for info sent to server
+				input = client.getInputStream();
+				output = client.getOutputStream();		
+			} catch(IOException ioe) {
+				System.out.println("Threw IOE: ");
+				System.out.println(ioe);
+			}
+		}
+
+		@Override
+		public void run() {
+			try {
+				// Grab information from the stream and send it back
+				int inputInt;
+				while((inputInt = input.read()) != -1) {
+				 output.write(inputInt);
+				 System.out.write(inputInt);
+				} 
+				output.flush();
+		   
+				// Close the client socket and reader since we're done
+				connection.close();				
+			} catch(IOException ioe) {
+				System.out.println("Threw IOE: ");
+				System.out.println(ioe);
+			}	   
+			
 		}
 	}
 }
