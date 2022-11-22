@@ -8,17 +8,25 @@ import java.net.Socket;
 public class EchoClient {
 	public static final int PORT_NUMBER = 6013;
 
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, InterruptedException {
 		EchoClient client = new EchoClient();
 		client.start();
 	}
 
-	private void start() throws IOException {
+	private void start() throws IOException, InterruptedException {
 		Socket socket = new Socket("localhost", PORT_NUMBER);
-		InputStream socketInputStream = socket.getInputStream();
-		OutputStream socketOutputStream = socket.getOutputStream();
+		Client reader = new ServerReader(socket);
+		Client writer = new ServerWriter(socket);
 
-		// Put your code here.
+		//Creates threads for connections
+		Thread firstThread = new Thread(reader);
+		Thread secondThread = new Thread(writer);
+
+		//Starts threads
+		firstThread.start();
+		secondThread.start();
+		firstThread.join();
+		secondThread.join();
 	}
 
 	/*

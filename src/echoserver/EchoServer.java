@@ -9,7 +9,8 @@ import java.net.Socket;
 public class EchoServer {
 	
 	// REPLACE WITH PORT PROVIDED BY THE INSTRUCTOR
-	public static final int PORT_NUMBER = 0; 
+	public static final int PORT_NUMBER = 6013;
+	public static int num_clients = 0; 
 	public static void main(String[] args) throws IOException, InterruptedException {
 		EchoServer server = new EchoServer();
 		server.start();
@@ -18,21 +19,17 @@ public class EchoServer {
 	private void start() throws IOException, InterruptedException {
 		ServerSocket serverSocket = new ServerSocket(PORT_NUMBER);
 		while (true) {
-			//Constructs two connections			
-			Socket firstClient = serverSocket.accept();
-			ServerConnection firstConnection = new ServerConnection(firstClient);
-			Socket secondClient = serverSocket.accept();
-			ServerConnection secondConnection = new ServerConnection(secondClient);
+			//Constructs connections			
+			Socket client = serverSocket.accept();
+			num_clients++;
+			System.out.println("Connected " + num_clients + ": ");
+			ServerConnection connection = new ServerConnection(client);
 
-			//Creates threads for connections
-			Thread firstThread = new Thread(firstConnection);
-			Thread secondThread = new Thread(secondConnection);
+			//Creates thread for new connection
+			Thread thread = new Thread(connection);
 
-			//Starts threads
-			firstThread.start();
-			secondThread.start();
-			firstThread.join();
-			secondThread.join();
+			//Starts thread
+			thread.start();
 		}
 	}
 
@@ -42,7 +39,6 @@ public class EchoServer {
 		OutputStream output;
 		public ServerConnection(Socket client) {
 			connection = client;
-        	System.out.println("Connected:");
 			try {
 	       		// Construct input stream for info sent to server
 				input = client.getInputStream();
@@ -64,7 +60,7 @@ public class EchoServer {
 				} 
 				output.flush();
 		   
-				// Close the client socket and reader since we're done
+				// Close the socket and reader since we're done
 				connection.close();				
 			} catch(IOException ioe) {
 				System.out.println("Threw IOE: ");
